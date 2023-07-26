@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Register</title>
+    <title>Login</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link
@@ -25,7 +25,12 @@
             >
               Masuk Akun Pelanggan
             </h1>
-            <form class="space-y-4 md:space-y-6" action="#">
+            <% if (flash.length > 0) { %>
+            <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50">
+              <span class="font-medium">Pemberitahuan: </span> <%= flash %>
+            </div>
+            <% } %>
+            <form class="space-y-4 md:space-y-6" action="login" method="post">
               <div>
                 <label
                   for="username"
@@ -36,7 +41,7 @@
                   type="text"
                   name="username"
                   class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
-                  placeholder="Pastikan terdapat nama aslimu"
+                  placeholder="Pastikan memasukkan username yang valid"
                   required=""
                 />
               </div>

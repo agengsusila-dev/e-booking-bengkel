@@ -1,8 +1,9 @@
 const express = require('express')
-const mysql = require('mysql')
-const flash = require('express-flash')
-const BodyParser = require('body-parser')
 const session = require('express-session')
+const flash = require('express-flash')
+const mysql = require('mysql')
+const BodyParser = require('body-parser')
+const bcrypt = require('bcrypt')
 const multer = require('multer')
 
 const storage = multer.diskStorage({
@@ -18,20 +19,20 @@ const upload = multer({ storage: storage })
 
 const app = express()
 
-app.use(express.urlencoded({ extended: true }))
+app.use(express.urlencoded({ extended: false }))
 app.use(BodyParser.urlencoded({ extended: true }))
+app.use(express.static('assets'))
 app.use('/assets/uploads', express.static('assets/uploads'))
-
+app.use(express.json())
 app.use(
   session({
     secret: 'your-secret-key',
     resave: false,
     saveUninitialized: true,
+    cookie: { secure: false },
   })
 )
-
 app.use(flash())
-
 app.use((req, res, next) => {
   if (req.body && req.body._method) {
     req.method = req.body._method
@@ -362,23 +363,30 @@ db.connect((err) => {
     const password = req.body.password
     const checkUsernameQuery =
       'SELECT COUNT(*) AS count FROM pelanggan WHERE username = ?'
+    // USERNAME VALIDATION USING FLASH MESSAGE
     db.query(checkUsernameQuery, [username], (err, result) => {
       if (err) {
         throw err
       }
-      // Jika count > 0, artinya username sudah digunakan
       const isUsernameTaken = result[0].count > 0
       if (isUsernameTaken) {
         req.flash(
           'error',
           'Username sudah terdaftar. Login atau isi username lain.'
         )
-        return res.redirect('/register') // Redirect kembali ke halaman registrasi
+        return res.redirect('/register')
       } else {
-        const insertLayananQuery = `INSERT INTO pelanggan VALUES (NULL, '${username}', '${password}', '${no_telepon}', '${alamat}');`
-        db.query(insertLayananQuery, (err, result) => {
-          if (err) throw err
-          res.redirect(`/login`)
+        const saltRounds = 10
+        bcrypt.hash(password, saltRounds, (err, hash) => {
+          if (err) {
+            console.error('Error hashing password: ', err)
+            return res.send('An error occurred during registration.')
+          }
+          const insertLayananQuery = `INSERT INTO pelanggan VALUES (NULL, '${username}', '${hash}', '${no_telepon}', '${alamat}');`
+          db.query(insertLayananQuery, (err, result) => {
+            if (err) throw err
+            res.redirect(`/login`)
+          })
         })
       }
     })
@@ -386,7 +394,83 @@ db.connect((err) => {
 
   //HANDLER LOGIN PELANGGAN
   app.get('/login', (req, res) => {
-    res.render('user/login')
+    res.render('user/login', { flash: req.flash('error') })
+  })
+  app.post('/login', (req, res) => {
+    const { username, password } = req.body
+
+    // Query ke database untuk mencari data pengguna berdasarkan username
+    const query = 'SELECT * FROM pelanggan WHERE username = ?'
+    db.query(query, [username], (err, result) => {
+      if (err) {
+        console.error('Error querying database: ', err)
+        return res.send('An error occurred during login.')
+      }
+
+      // Cek apakah data pengguna ditemukan
+      if (result.length === 0) {
+        req.flash('error', 'Username not found.')
+        return res.redirect('/login')
+      }
+
+      // Bandingkan password yang dimasukkan dengan password di database
+      const user = result[0]
+      bcrypt.compare(password, user.password, (error, isMatch) => {
+        if (error) {
+          console.error('Error comparing passwords: ', error)
+          return res.send('An error occurred during login.')
+        }
+
+        if (isMatch) {
+          // Jika password cocok, simpan data pengguna dalam sesi
+          req.session.user = {
+            id: user.id,
+            username: user.username,
+            no_telepon: user.no_telepon,
+            // tambahkan data lainnya yang ingin disimpan dalam sesi
+          }
+          return res.redirect('/home') // Ganti dengan halaman setelah login berhasil
+        } else {
+          req.flash('error', 'Invalid password.')
+          return res.redirect('/login')
+        }
+      })
+    })
+  })
+
+  // Middleware untuk memeriksa apakah pengguna sudah login
+  const requireLogin = (req, res, next) => {
+    if (req.session.user) {
+      // Pengguna sudah login, lanjutkan ke halaman yang diakses
+      next()
+    } else {
+      // Pengguna belum login, arahkan ke halaman login
+      res.redirect('/login')
+    }
+  }
+
+  // Route untuk halaman setelah login berhasil (dashboard, contohnya)
+  app.get('/home', requireLogin, (req, res) => {
+    // Ambil data pelanggan dari sesi untuk keperluan tertentu
+    const user = req.session.user
+    res.render('user/home', { user })
+  })
+
+  //HANDLER BOOKING PELANGGAN
+  app.get('/booking', requireLogin, (req, res) => {
+    res.render('user/booking')
+  })
+
+  //HANDLER LOGOUT
+  app.get('/logout', (req, res) => {
+    // Hapus sesi pengguna
+    req.session.destroy((err) => {
+      if (err) {
+        console.log('Error while destroying session:', err)
+      }
+      // Redirect ke halaman login setelah logout
+      res.redirect('/login')
+    })
   })
 })
 
