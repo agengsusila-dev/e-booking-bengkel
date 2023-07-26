@@ -1,7 +1,10 @@
 const express = require('express')
 const mysql = require('mysql')
+const flash = require('express-flash')
 const BodyParser = require('body-parser')
+const session = require('express-session')
 const multer = require('multer')
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'assets/uploads') // Ubah direktori penyimpanan gambar menjadi 'assets/uploads'
@@ -18,6 +21,16 @@ const app = express()
 app.use(express.urlencoded({ extended: true }))
 app.use(BodyParser.urlencoded({ extended: true }))
 app.use('/assets/uploads', express.static('assets/uploads'))
+
+app.use(
+  session({
+    secret: 'your-secret-key',
+    resave: false,
+    saveUninitialized: true,
+  })
+)
+
+app.use(flash())
 
 app.use((req, res, next) => {
   if (req.body && req.body._method) {
@@ -339,18 +352,35 @@ db.connect((err) => {
 
   //HANDLER REGISTER
   app.get('/register', (req, res) => {
-    res.render('user/register')
+    res.render('user/register', { flash: req.flash('error') })
   })
+
   app.post('/register-pelanggan', (req, res) => {
     const username = req.body.username
     const no_telepon = req.body.no_telepon
     const alamat = req.body.alamat
     const password = req.body.password
-
-    const insertLayananQuery = `INSERT INTO pelanggan VALUES (NULL, '${username}', '${password}', '${no_telepon}', '${alamat}');`
-    db.query(insertLayananQuery, (err, result) => {
-      if (err) throw err
-      res.redirect(`/login`)
+    const checkUsernameQuery =
+      'SELECT COUNT(*) AS count FROM pelanggan WHERE username = ?'
+    db.query(checkUsernameQuery, [username], (err, result) => {
+      if (err) {
+        throw err
+      }
+      // Jika count > 0, artinya username sudah digunakan
+      const isUsernameTaken = result[0].count > 0
+      if (isUsernameTaken) {
+        req.flash(
+          'error',
+          'Username sudah terdaftar. Login atau isi username lain.'
+        )
+        return res.redirect('/register') // Redirect kembali ke halaman registrasi
+      } else {
+        const insertLayananQuery = `INSERT INTO pelanggan VALUES (NULL, '${username}', '${password}', '${no_telepon}', '${alamat}');`
+        db.query(insertLayananQuery, (err, result) => {
+          if (err) throw err
+          res.redirect(`/login`)
+        })
+      }
     })
   })
 
