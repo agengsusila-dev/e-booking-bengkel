@@ -272,8 +272,91 @@ db.connect((err) => {
       res.render('antrian/antrian', {
         antrian: antrian,
         title: 'Data Antrian Pelanggan',
+        desc: 'Antrian yang dilakukan pelanggan',
       })
     })
+  })
+  app.get('/antrian-ubah/:id', (req, res) => {
+    const id = req.params.id
+    const getAntrianQuery = `SELECT * FROM antrian WHERE id_antrian = '${id}';`
+    const getBengkelQuery = `SELECT id_bengkel, nama_bengkel FROM bengkel`
+    const getLayananQuery = `SELECT id_layanan, nama_layanan FROM layanan`
+    const getMotorQuery = `SELECT nopolisi FROM motor`
+
+    db.query(getBengkelQuery, (err, resultBengkel) => {
+      const bengkel = resultBengkel
+    })
+
+    db.query(getAntrianQuery, (err, resultAntrian) => {
+      if (err) throw err
+      db.query(getBengkelQuery, (err, resultBengkel) => {
+        if (err) throw err
+        db.query(getLayananQuery, (err, resultLayanan) => {
+          if (err) throw err
+          db.query(getMotorQuery, (err, resultMotor) => {
+            if (err) throw err
+
+            const antrian = resultAntrian[0]
+            const bengkel = resultBengkel
+            const layanan = resultLayanan
+            const motor = resultMotor
+
+            res.render('antrian/antrian-ubah', {
+              antrian,
+              bengkel,
+              layanan,
+              motor,
+            })
+          })
+        })
+      })
+    })
+  })
+  app.post('/antrian-ubah/:id', (req, res) => {
+    const id = req.params.id
+    const nopolisi = req.body.nopolisi
+    const id_bengkel = req.body.id_bengkel
+    const id_layanan = req.body.id_layanan
+    const keluhan = req.body.keluhan
+
+    const updateAntrianQuery = `UPDATE antrian SET nopolisi = '${nopolisi}', id_bengkel = '${id_bengkel}', id_layanan = '${id_layanan}', keluhan = '${keluhan}' WHERE id_antrian= '${id}';`
+    db.query(updateAntrianQuery, (err, result) => {
+      if (err) throw err
+      res.redirect('/antrian')
+    })
+  })
+  app.delete('/antrian/:id', (req, res) => {
+    const id = req.params.id
+
+    console.log('DELETE request received for ID:', id)
+
+    const deleteLayananQuery = `DELETE FROM antrian WHERE id_antrian = '${id}';`
+    db.query(deleteLayananQuery, (err, result) => {
+      if (err) throw err
+      res.redirect('/antrian')
+    })
+  })
+
+  //HANDLER REGISTER
+  app.get('/register', (req, res) => {
+    res.render('user/register')
+  })
+  app.post('/register-pelanggan', (req, res) => {
+    const username = req.body.username
+    const no_telepon = req.body.no_telepon
+    const alamat = req.body.alamat
+    const password = req.body.password
+
+    const insertLayananQuery = `INSERT INTO pelanggan VALUES (NULL, '${username}', '${password}', '${no_telepon}', '${alamat}');`
+    db.query(insertLayananQuery, (err, result) => {
+      if (err) throw err
+      res.redirect(`/login`)
+    })
+  })
+
+  //HANDLER LOGIN PELANGGAN
+  app.get('/login', (req, res) => {
+    res.render('user/login')
   })
 })
 
