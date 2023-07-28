@@ -297,10 +297,6 @@ db.connect((err) => {
     const getLayananQuery = `SELECT id_layanan, nama_layanan FROM layanan`
     const getMotorQuery = `SELECT nopolisi FROM motor`
 
-    db.query(getBengkelQuery, (err, resultBengkel) => {
-      const bengkel = resultBengkel
-    })
-
     db.query(getAntrianQuery, (err, resultAntrian) => {
       if (err) throw err
       db.query(getBengkelQuery, (err, resultBengkel) => {
@@ -458,7 +454,40 @@ db.connect((err) => {
 
   //HANDLER BOOKING PELANGGAN
   app.get('/booking', requireLogin, (req, res) => {
-    res.render('user/booking')
+    const user = req.session.user
+    const getBengkelQuery = `SELECT * FROM bengkel`
+    const getLayananQuery = `SELECT * FROM layanan`
+
+    db.query(getBengkelQuery, (err, resultBengkelQuery) => {
+      db.query(getLayananQuery, (err, resultLayananQuery) => {
+        const bengkel = resultBengkelQuery
+        const layanan = resultLayananQuery
+        res.render('user/booking', { user, layanan, bengkel })
+      })
+    })
+  })
+
+  app.post('/booking-pelanggan', requireLogin, (req, res) => {
+    const id_pelanggan = req.session.user.id
+    const id_bengkel = req.body.id_bengkel
+    const id_layanan = req.body.id_layanan
+    const nopolisi = req.body.nopolisi
+    const tahun = req.body.tahun
+    const tipe = req.body.tipe
+    const warna = req.body.warna
+    const keluhan = req.body.keluhan
+    const tanggal_booking = req.body.tanggal_booking
+    const waktu_booking = req.body.waktu_booking
+
+    const insertMotorQuery = `INSERT INTO motor VALUES ('${nopolisi}', '${tahun}', '${tipe}', '${warna}', '${id_pelanggan}');`
+    db.query(insertMotorQuery, (err, result) => {
+      if (err) throw err
+      const insertAntrianQuery = `INSERT INTO antrian VALUES (NULL, '${nopolisi}', '${id_bengkel}', '${id_layanan}', '${keluhan}', '${tanggal_booking}', '${waktu_booking}', NULL) `
+      db.query(insertAntrianQuery, (err, result) => {
+        if (err) throw err
+        res.redirect('/booking')
+      })
+    })
   })
 
   //HANDLER LOGOUT
