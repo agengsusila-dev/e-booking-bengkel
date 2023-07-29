@@ -3,12 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ubah Layanan</title>
+    <title>Pelanggan</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.7.0/flowbite.min.css"
-      rel="stylesheet"
-    />
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
   </head>
   <body>
     <div class="flex flex-row space-x-4 h-screen">
@@ -16,7 +13,7 @@
       <nav class="p-2 space-y-2 text-xs border-x-2">
         <div>
           <a
-            href="/dashboard"
+            href="/"
             class="flex items-center space-x-2 font-medium p-2 text-slate-700 rounded-lg hover:bg-red-500 hover:text-white"
           >
             <svg
@@ -209,75 +206,6 @@
           </a>
         </div>
       </nav>
-      <div class="w-1/2">
-        <div class="mt-5">
-          <a href="/layanan">
-            <div class="mb-5 flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="w-4 h-4"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M9.53 2.47a.75.75 0 010 1.06L4.81 8.25H15a6.75 6.75 0 010 13.5h-3a.75.75 0 010-1.5h3a5.25 5.25 0 100-10.5H4.81l4.72 4.72a.75.75 0 11-1.06 1.06l-6-6a.75.75 0 010-1.06l6-6a.75.75 0 011.06 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              <div class="ml-4 text-sm">
-                <caption class="text-gray-900">
-                  Laman Sebelumnya
-                </caption>
-              </div>
-            </div>
-          </a>
-          <form
-            action="/layanan-ubah/<%= layanan.id_layanan %>"
-            method="post"
-            enctype="multipart/form-data"
-          >
-            <div class="mb-6">
-              <label
-                for="text"
-                class="block mb-2 text-sm font-medium text-gray-900"
-                >Nama Layanan</label
-              >
-              <input
-                type="text"
-                name="nama"
-                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                value="<%= layanan.nama_layanan %>"
-                required
-              />
-            </div>
-            <div class="mb-6">
-              <label
-                class="block mb-2 text-sm font-medium text-gray-900"
-                for="user_avatar"
-                >Unggah Gambar Layanan</label
-              >
-              <input
-                name="gambar"
-                class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50"
-                aria-describedby="user_avatar_help"
-                id="user_avatar"
-                type="file"
-              />
-              <div class="mt-1 text-sm text-gray-500" id="user_avatar_help">
-                Pastikan gambar layanan memiliki kualitas yang baik
-              </div>
-            </div>
-            <button
-              type="submit"
-              class="text-white bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center"
-            >
-              Ubah
-            </button>
-          </form>
-        </div>
-      </div>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.7.0/flowbite.min.js"></script>
   </body>
 </html>

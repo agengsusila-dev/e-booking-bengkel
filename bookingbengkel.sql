@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jul 15, 2023 at 03:59 PM
+-- Generation Time: Jul 28, 2023 at 05:04 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.1.17
 
@@ -45,7 +45,10 @@ CREATE TABLE `antrian` (
 --
 
 INSERT INTO `antrian` (`id_antrian`, `nopolisi`, `id_bengkel`, `id_layanan`, `keluhan`, `tanggal_booking`, `waktu_booking`, `waktu_transaksi`) VALUES
-(1, 'B4123KOP', 1, 1, 'Sedikit berat saat gas dan apabila sedang dipanasin selalu mati tidak standby.', '2023-07-13', '12:05:02', '2023-07-15 10:05:54');
+(1, 'B4123KOP', 1, 1, 'Sedikit berat saat gas.', '2023-07-13', '12:05:02', '2023-07-15 10:05:54'),
+(2, 'B4123KOP', 1, 1, 'tes', '2023-07-04', '12:26:44', '2023-07-24 10:37:17'),
+(3, 'B4610KGI', 1, 1, 'Sejauh pemakaian tidak ada hanya ingin mengganti oli saja.', '2023-07-12', '10:00:00', '2023-07-28 04:39:25'),
+(4, 'B4912FCB', 3, 3, 'Bunyi saat di gas berasal dari mesin', '2023-07-15', '11:00:00', '2023-07-28 13:33:01');
 
 -- --------------------------------------------------------
 
@@ -65,7 +68,7 @@ CREATE TABLE `bengkel` (
 --
 
 INSERT INTO `bengkel` (`id_bengkel`, `nama_bengkel`, `alamat`, `foto_bengkel`) VALUES
-(1, 'BERKAH DATANG DARI MOTOR BEKASI', 'Jl. Palmerah II No. 32 RT 012/014 Kel. Jatibening, Kec. Pondok Gede, Kota Bekasi.', ''),
+(1, 'BERKAH DATANG DARI MOTOR BEKASI', 'Jl. Palmerah II No. 32 RT 012/015 Kel. Jatibening, Kec. Pondok Gede, Kota Bekasi.', '1690131233937-849874316.jpg'),
 (2, 'BERKAH DATANG DARI MOTOR JAKARTA', 'Jl. Bawira Kencana I No. 12 RT 002/001 Kel. Setu, Kec. Cipayung, Kota Administrasi Jakarta Timur.', ''),
 (3, 'BENGKEL BERKAH DARI MOTOR CIKARANG', 'Jl. Persatuan III No. 42 RT002/024 Kel. Sertajaya, Kecamatan Cikarang Timur, Kabupaten Bekasi', '');
 
@@ -86,9 +89,9 @@ CREATE TABLE `layanan` (
 --
 
 INSERT INTO `layanan` (`id_layanan`, `nama_layanan`, `gambar_layanan`) VALUES
-(1, 'Ganti Oli', ''),
-(2, 'Tune Up', ''),
-(3, 'Turun Mesin', '');
+(1, 'Ganti Oli', '1690130190877-985410582.jpg'),
+(2, 'Tune Up', '1690123823171-861934812.jpg'),
+(3, 'Turun Mesin', '1690123829916-473835826.avif');
 
 -- --------------------------------------------------------
 
@@ -109,9 +112,13 @@ CREATE TABLE `motor` (
 --
 
 INSERT INTO `motor` (`nopolisi`, `tahun`, `tipe`, `warna`, `id_pelanggan`) VALUES
+('B1920KGO', 2021, 'Beat Fi', 'Hitam', 16),
 ('B2135TUI', 2015, 'Vario 150', 'Biru Tua', 3),
 ('B4123KOP', 2021, 'Supra X 125', 'Merah', 1),
-('B4334FCB', 2023, 'NMax 150', 'Putih', 2);
+('B4334FCB', 2023, 'NMax 150', 'Putih', 2),
+('B4610KGI', 2021, 'Vario 125', 'Abu-abu', 16),
+('B4660KGI', 2021, 'Vario 125', 'Putih', 16),
+('B4912FCB', 2022, 'Aerox 155', 'Hitam-Hijau', 16);
 
 -- --------------------------------------------------------
 
@@ -132,9 +139,11 @@ CREATE TABLE `pelanggan` (
 --
 
 INSERT INTO `pelanggan` (`id`, `username`, `password`, `no_telepon`, `alamat`) VALUES
-(1, 'pelanggan1', 'pelanggan1', '089502110234', 'Taman Wisma Asri 2 Bekasi Utara'),
+(1, 'pelanggan1', 'pelanggan1', '081234516781', 'Taman Wisma Asri 2 Blok S 21 No. 25'),
 (2, 'pelanggan2', 'pelanggan2', '082121292109', 'Griya Asri 1 Cikarang Utara'),
-(3, 'pelanggan3', 'pelanggan3', '088776543120', 'Cipayung Regency Utama Cipayung');
+(3, 'pelanggan3', 'pelanggan3', '088776543120', 'Cipayung Regency Utama Cipayung'),
+(15, 'pelanggan10', '12345', '0891291', 'dimana pun itu'),
+(16, 'pelanggan7', '$2b$10$L/sV6.217JwaNCOU/f00yuPA/hGpW7pDfzhXJFPNnIwrnQQcoaU.K', '089765412178', 'Jl. Boulevard 2 No. 21 Bekasi');
 
 --
 -- Indexes for dumped tables
@@ -183,25 +192,25 @@ ALTER TABLE `pelanggan`
 -- AUTO_INCREMENT for table `antrian`
 --
 ALTER TABLE `antrian`
-  MODIFY `id_antrian` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_antrian` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `bengkel`
 --
 ALTER TABLE `bengkel`
-  MODIFY `id_bengkel` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_bengkel` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `layanan`
 --
 ALTER TABLE `layanan`
-  MODIFY `id_layanan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_layanan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `pelanggan`
 --
 ALTER TABLE `pelanggan`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- Constraints for dumped tables

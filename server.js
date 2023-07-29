@@ -55,6 +55,12 @@ const db = mysql.createConnection({
 db.connect((err) => {
   if (err) throw err
   console.log('Database connected')
+
+  // HANDLER DASHBOARD ADMIN
+  app.get('/dashboard', (req, res) => {
+    res.render('admin/dashboard')
+  })
+
   // HANDLER PELANGGAN
   app.get('/pelanggan', (req, res) => {
     const pelangganQuery = 'SELECT * FROM pelanggan'
@@ -485,7 +491,124 @@ db.connect((err) => {
       const insertAntrianQuery = `INSERT INTO antrian VALUES (NULL, '${nopolisi}', '${id_bengkel}', '${id_layanan}', '${keluhan}', '${tanggal_booking}', '${waktu_booking}', NULL) `
       db.query(insertAntrianQuery, (err, result) => {
         if (err) throw err
-        res.redirect('/booking')
+        req.flash('success', 'Booking Berhasil Dilakukan')
+        return res.redirect('/riwayat')
+      })
+    })
+  })
+
+  //HANDLER RIWAYAT
+  app.get('/riwayat', requireLogin, (req, res) => {
+    const id = req.session.user.id
+    const user = req.session.user
+    const getAntrianQuery = `SELECT * FROM antrian a JOIN motor m ON a.nopolisi = m.nopolisi JOIN bengkel b ON a.id_bengkel = b.id_bengkel JOIN layanan l ON a.id_layanan = l.id_layanan JOIN pelanggan p ON p.id = m.id_pelanggan WHERE p.id = '${id}'`
+    db.query(getAntrianQuery, (err, resultAntrianQuery) => {
+      if (err) throw err
+      resultAntrianQuery.forEach((antrian) => {
+        const waktuBooking = new Date(antrian.waktu_transaksi)
+        const tanggalKedatangan = new Date(antrian.tanggal_booking)
+        antrian.waktuBooking = waktuBooking.toLocaleString('en-GB', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        })
+        antrian.tanggalKedatangan = tanggalKedatangan.toLocaleString('en-GB', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
+      })
+      res.render('user/riwayat-booking', {
+        user,
+        antrian: resultAntrianQuery,
+        flash: req.flash('success'),
+      })
+    })
+  })
+
+  //HANDLER REGISTER ADMIN
+  app.get('/register-admin', (req, res) => {
+    res.render('admin/register', { flash: req.flash('error') })
+  })
+
+  app.post('/register-admin', (req, res) => {
+    const username = req.body.username
+    const password = req.body.password
+    const checkUsernameQuery =
+      'SELECT COUNT(*) AS count FROM admin WHERE username = ?'
+    // USERNAME VALIDATION USING FLASH MESSAGE
+    db.query(checkUsernameQuery, [username], (err, result) => {
+      if (err) {
+        throw err
+      }
+      const isUsernameTaken = result[0].count > 0
+      if (isUsernameTaken) {
+        req.flash(
+          'error',
+          'Username sudah terdaftar. Login atau isi username lain.'
+        )
+        return res.redirect('/register-admin')
+      } else {
+        const saltRounds = 10
+        bcrypt.hash(password, saltRounds, (err, hash) => {
+          if (err) {
+            console.error('Error hashing password: ', err)
+            return res.send('An error occurred during registration.')
+          }
+          const insertLayananQuery = `INSERT INTO admin VALUES (NULL, '${username}', '${hash}');`
+          db.query(insertLayananQuery, (err, result) => {
+            if (err) throw err
+            res.redirect(`/login-admin`)
+          })
+        })
+      }
+    })
+  })
+
+  //HANDLER LOGIN ADMIN
+  app.get('/login-admin', (req, res) => {
+    res.render('admin/login', { flash: req.flash('error') })
+  })
+  app.post('/login-admin', (req, res) => {
+    const { username, password } = req.body
+
+    // Query ke database untuk mencari data pengguna berdasarkan username
+    const query = 'SELECT * FROM admin WHERE username = ?'
+    db.query(query, [username], (err, result) => {
+      if (err) {
+        console.error('Error querying database: ', err)
+        return res.send('An error occurred during login.')
+      }
+
+      // Cek apakah data pengguna ditemukan
+      if (result.length === 0) {
+        req.flash('error', 'Username not found.')
+        return res.redirect('/login')
+      }
+
+      // Bandingkan password yang dimasukkan dengan password di database
+      const user = result[0]
+      bcrypt.compare(password, user.password, (error, isMatch) => {
+        if (error) {
+          console.error('Error comparing passwords: ', error)
+          return res.send('An error occurred during login.')
+        }
+
+        if (isMatch) {
+          // Jika password cocok, simpan data pengguna dalam sesi
+          req.session.user = {
+            id: user.id,
+            username: user.username,
+            // tambahkan data lainnya yang ingin disimpan dalam sesi
+          }
+          return res.redirect('/dashboard') // Ganti dengan halaman setelah login berhasil
+        } else {
+          req.flash('error', 'Invalid password.')
+          return res.redirect('/login-admin')
+        }
       })
     })
   })

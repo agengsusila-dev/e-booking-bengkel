@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Register</title>
+    <title>Register Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.7.0/flowbite.min.css"
@@ -22,7 +22,7 @@
             <h1
               class="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl"
             >
-              Registrasi Akun Pelanggan
+              Registrasi Admin
             </h1>
             <% if (flash.length > 0) { %>
             <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50">
@@ -31,7 +31,7 @@
             <% } %>
             <form
               class="space-y-4 md:space-y-6"
-              action="register-pelanggan"
+              action="register-admin"
               method="post"
             >
               <div>
@@ -49,34 +49,7 @@
                   required=""
                 />
               </div>
-              <div>
-                <label
-                  for="no_telepon"
-                  class="block mb-2 text-sm font-medium text-gray-900"
-                  >Nomor Telepon</label
-                >
-                <input
-                  type="text"
-                  name="no_telepon"
-                  class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
-                  placeholder="Format: 08xxxxxxxxxx"
-                  required=""
-                />
-              </div>
-              <div>
-                <label
-                  for="alamat"
-                  class="block mb-2 text-sm font-medium text-gray-900"
-                  >Alamat</label
-                >
-                <input
-                  type="text"
-                  name="alamat"
-                  class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
-                  placeholder="Tempat tinggalmu"
-                  required=""
-                />
-              </div>
+
               <div>
                 <label
                   for="password"
@@ -98,14 +71,6 @@
               >
                 Konfirmasi
               </button>
-              <p class="text-sm font-light text-gray-500">
-                Sudah pernah registrasi?
-                <a
-                  href="/login"
-                  class="font-medium text-primary-600 hover:underline"
-                  >Masuk</a
-                >
-              </p>
             </form>
           </div>
         </div>
