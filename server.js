@@ -56,13 +56,107 @@ db.connect((err) => {
   if (err) throw err
   console.log('Database connected')
 
+  //HANDLER REGISTER ADMIN
+  app.get('/register-admin', (req, res) => {
+    res.render('admin/register', { flash: req.flash('error') })
+  })
+
+  app.post('/register-admin', (req, res) => {
+    const username = req.body.username
+    const password = req.body.password
+    const checkUsernameQuery =
+      'SELECT COUNT(*) AS count FROM admin WHERE username = ?'
+    // USERNAME VALIDATION USING FLASH MESSAGE
+    db.query(checkUsernameQuery, [username], (err, result) => {
+      if (err) {
+        throw err
+      }
+      const isUsernameTaken = result[0].count > 0
+      if (isUsernameTaken) {
+        req.flash(
+          'error',
+          'Username sudah terdaftar. Login atau isi username lain.'
+        )
+        return res.redirect('/register-admin')
+      } else {
+        const saltRounds = 10
+        bcrypt.hash(password, saltRounds, (err, hash) => {
+          if (err) {
+            console.error('Error hashing password: ', err)
+            return res.send('An error occurred during registration.')
+          }
+          const insertLayananQuery = `INSERT INTO admin VALUES (NULL, '${username}', '${hash}');`
+          db.query(insertLayananQuery, (err, result) => {
+            if (err) throw err
+            res.redirect(`/login-admin`)
+          })
+        })
+      }
+    })
+  })
+
+  //HANDLER LOGIN ADMIN
+  app.get('/login-admin', (req, res) => {
+    res.render('admin/login', { flash: req.flash('error') })
+  })
+  app.post('/login-admin', (req, res) => {
+    const { username, password } = req.body
+
+    // Query ke database untuk mencari data pengguna berdasarkan username
+    const query = 'SELECT * FROM admin WHERE username = ?'
+    db.query(query, [username], (err, result) => {
+      if (err) {
+        console.error('Error querying database: ', err)
+        return res.send('An error occurred during login.')
+      }
+
+      // Cek apakah data pengguna ditemukan
+      if (result.length === 0) {
+        req.flash('error', 'Username not found.')
+        return res.redirect('/login-admin')
+      }
+
+      // Bandingkan password yang dimasukkan dengan password di database
+      const user = result[0]
+      bcrypt.compare(password, user.password, (error, isMatch) => {
+        if (error) {
+          console.error('Error comparing passwords: ', error)
+          return res.send('An error occurred during login.')
+        }
+
+        if (isMatch) {
+          // Jika password cocok, simpan data pengguna dalam sesi
+          req.session.user = {
+            id: user.id,
+            username: user.username,
+            // tambahkan data lainnya yang ingin disimpan dalam sesi
+          }
+          return res.redirect('/dashboard') // Ganti dengan halaman setelah login berhasil
+        } else {
+          req.flash('error', 'Invalid password.')
+          return res.redirect('/login-admin')
+        }
+      })
+    })
+  })
+
+  const requireLoginAdmin = (req, res, next) => {
+    if (req.session.user) {
+      // Pengguna sudah login, lanjutkan ke halaman yang diakses
+      next()
+    } else {
+      // Pengguna belum login, arahkan ke halaman login
+      res.redirect('/login-admin')
+    }
+  }
+
   // HANDLER DASHBOARD ADMIN
-  app.get('/dashboard', (req, res) => {
+  app.get('/dashboard', requireLoginAdmin, (req, res) => {
     res.render('admin/dashboard')
   })
 
   // HANDLER PELANGGAN
-  app.get('/pelanggan', (req, res) => {
+  app.get('/pelanggan', requireLoginAdmin, (req, res) => {
     const pelangganQuery = 'SELECT * FROM pelanggan'
     db.query(pelangganQuery, (err, results) => {
       const pelanggan = JSON.parse(JSON.stringify(results))
@@ -74,7 +168,7 @@ db.connect((err) => {
       })
     })
   })
-  app.get('/pelanggan-ubah/:id', (req, res) => {
+  app.get('/pelanggan-ubah/:id', requireLoginAdmin, (req, res) => {
     const id = req.params.id
     const getPelangganQuery = `SELECT * FROM pelanggan WHERE id = '${id}';`
     console.log(req.body.username)
@@ -85,7 +179,7 @@ db.connect((err) => {
       res.render('pelanggan/pelanggan-ubah', { pelanggan })
     })
   })
-  app.post('/pelanggan-ubah/:id', (req, res) => {
+  app.post('/pelanggan-ubah/:id', requireLoginAdmin, (req, res) => {
     const id = req.params.id
     const username = req.body.username
     const no_telepon = req.body.no_telepon
@@ -97,7 +191,7 @@ db.connect((err) => {
       res.redirect('/pelanggan')
     })
   })
-  app.delete('/pelanggan/:id', (req, res) => {
+  app.delete('/pelanggan/:id', requireLoginAdmin, (req, res) => {
     const id = req.params.id
 
     console.log('DELETE request received for ID:', id)
@@ -110,7 +204,7 @@ db.connect((err) => {
   })
 
   // HANDLER BENGKEL
-  app.get('/bengkel', (req, res) => {
+  app.get('/bengkel', requireLoginAdmin, (req, res) => {
     const bengkelQuery = 'SELECT * FROM bengkel'
     db.query(bengkelQuery, (err, results) => {
       const bengkel = JSON.parse(JSON.stringify(results))
@@ -122,7 +216,7 @@ db.connect((err) => {
       })
     })
   })
-  app.get('/bengkel-tambah', (req, res) => {
+  app.get('/bengkel-tambah', requireLoginAdmin, (req, res) => {
     res.render('bengkel/bengkel-tambah')
   })
   app.post('/bengkel-tambah', upload.single('gambar'), (req, res) => {
@@ -136,19 +230,24 @@ db.connect((err) => {
       res.redirect('/bengkel')
     })
   })
-  app.post('/bengkel-ubah/:id', upload.single('gambar'), (req, res) => {
-    const id = req.params.id
-    const nama = req.body.nama
-    const alamat = req.body.alamat
-    const gambar = req.file.filename
+  app.post(
+    '/bengkel-ubah/:id',
+    requireLoginAdmin,
+    upload.single('gambar'),
+    (req, res) => {
+      const id = req.params.id
+      const nama = req.body.nama
+      const alamat = req.body.alamat
+      const gambar = req.file.filename
 
-    const updateBengkelQuery = `UPDATE bengkel SET nama_bengkel = '${nama}', alamat = '${alamat}', foto_bengkel = '${gambar}' WHERE id_bengkel = '${id}';`
-    db.query(updateBengkelQuery, (err, result) => {
-      if (err) throw err
-      res.redirect('/bengkel')
-    })
-  })
-  app.delete('/bengkel/:id', (req, res) => {
+      const updateBengkelQuery = `UPDATE bengkel SET nama_bengkel = '${nama}', alamat = '${alamat}', foto_bengkel = '${gambar}' WHERE id_bengkel = '${id}';`
+      db.query(updateBengkelQuery, (err, result) => {
+        if (err) throw err
+        res.redirect('/bengkel')
+      })
+    }
+  )
+  app.delete('/bengkel/:id', requireLoginAdmin, (req, res) => {
     const id = req.params.id
 
     console.log('DELETE request received for ID:', id)
@@ -159,7 +258,7 @@ db.connect((err) => {
       res.redirect('/bengkel')
     })
   })
-  app.get('/bengkel-ubah/:id', (req, res) => {
+  app.get('/bengkel-ubah/:id', requireLoginAdmin, (req, res) => {
     const id = req.params.id
     const getBengkelQuery = `SELECT * FROM bengkel WHERE id_bengkel = '${id}';`
 
@@ -171,7 +270,7 @@ db.connect((err) => {
   })
 
   //HANDLER MOTOR
-  app.get('/motor', (req, res) => {
+  app.get('/motor', requireLoginAdmin, (req, res) => {
     const motorQuery =
       'SELECT * FROM motor JOIN pelanggan on motor.id_pelanggan = pelanggan.id'
     db.query(motorQuery, (err, results) => {
@@ -184,7 +283,7 @@ db.connect((err) => {
       })
     })
   })
-  app.get('/motor-ubah/:nopolisi', (req, res) => {
+  app.get('/motor-ubah/:nopolisi', requireLoginAdmin, (req, res) => {
     const id = req.params.nopolisi
     const getMotorQuery = `SELECT * FROM motor WHERE nopolisi = '${id}';`
     const getPelangganOptions = `SELECT id, username FROM pelanggan;`
@@ -199,7 +298,7 @@ db.connect((err) => {
       })
     })
   })
-  app.post('/motor-ubah/:nopolisi', (req, res) => {
+  app.post('/motor-ubah/:nopolisi', requireLoginAdmin, (req, res) => {
     const nopolisi = req.params.nopolisi
     const tahun = req.body.tahun
     const tipe = req.body.tipe
@@ -212,7 +311,7 @@ db.connect((err) => {
       res.redirect('/motor')
     })
   })
-  app.delete('/motor/:nopolisi', (req, res) => {
+  app.delete('/motor/:nopolisi', requireLoginAdmin, (req, res) => {
     const nopolisi = req.params.nopolisi
 
     console.log('DELETE request received for No Polisi:', nopolisi)
@@ -225,7 +324,7 @@ db.connect((err) => {
   })
 
   //HANDLER LAYANAN
-  app.get('/layanan', (req, res) => {
+  app.get('/layanan', requireLoginAdmin, (req, res) => {
     const layananQuery = 'SELECT * FROM layanan'
     db.query(layananQuery, (err, results) => {
       const layanan = JSON.parse(JSON.stringify(results))
@@ -237,20 +336,25 @@ db.connect((err) => {
       })
     })
   })
-  app.get('/layanan-tambah', (req, res) => {
+  app.get('/layanan-tambah', requireLoginAdmin, (req, res) => {
     res.render('layanan/layanan-tambah')
   })
-  app.post('/layanan-tambah', upload.single('gambar'), (req, res) => {
-    const nama = req.body.nama
-    const gambar = req.file.filename
+  app.post(
+    '/layanan-tambah',
+    requireLoginAdmin,
+    upload.single('gambar'),
+    (req, res) => {
+      const nama = req.body.nama
+      const gambar = req.file.filename
 
-    const insertLayananQuery = `INSERT INTO layanan VALUES (NULL, '${nama}', '${gambar}');`
-    db.query(insertLayananQuery, (err, result) => {
-      if (err) throw err
-      res.redirect('/layanan')
-    })
-  })
-  app.get('/layanan-ubah/:id', (req, res) => {
+      const insertLayananQuery = `INSERT INTO layanan VALUES (NULL, '${nama}', '${gambar}');`
+      db.query(insertLayananQuery, (err, result) => {
+        if (err) throw err
+        res.redirect('/layanan')
+      })
+    }
+  )
+  app.get('/layanan-ubah/:id', requireLoginAdmin, (req, res) => {
     const id = req.params.id
     const getLayananQuery = `SELECT * FROM layanan WHERE id_layanan = '${id}';`
 
@@ -260,18 +364,23 @@ db.connect((err) => {
       res.render('layanan/layanan-ubah', { layanan })
     })
   })
-  app.post('/layanan-ubah/:id', upload.single('gambar'), (req, res) => {
-    const id = req.params.id
-    const nama = req.body.nama
-    const gambar = req.file.filename
+  app.post(
+    '/layanan-ubah/:id',
+    requireLoginAdmin,
+    upload.single('gambar'),
+    (req, res) => {
+      const id = req.params.id
+      const nama = req.body.nama
+      const gambar = req.file.filename
 
-    const updateBengkelQuery = `UPDATE layanan SET nama_layanan = '${nama}', gambar_layanan = '${gambar}' WHERE id_layanan = '${id}';`
-    db.query(updateBengkelQuery, (err, result) => {
-      if (err) throw err
-      res.redirect('/layanan')
-    })
-  })
-  app.delete('/layanan/:id', (req, res) => {
+      const updateBengkelQuery = `UPDATE layanan SET nama_layanan = '${nama}', gambar_layanan = '${gambar}' WHERE id_layanan = '${id}';`
+      db.query(updateBengkelQuery, (err, result) => {
+        if (err) throw err
+        res.redirect('/layanan')
+      })
+    }
+  )
+  app.delete('/layanan/:id', requireLoginAdmin, (req, res) => {
     const id = req.params.id
 
     console.log('DELETE request received for ID:', id)
@@ -283,7 +392,7 @@ db.connect((err) => {
     })
   })
 
-  app.get('/antrian', (req, res) => {
+  app.get('/antrian', requireLoginAdmin, (req, res) => {
     const antrianQuery =
       'SELECT * FROM antrian a JOIN bengkel b ON a.id_bengkel = b.id_bengkel JOIN layanan l ON a.id_layanan = l.id_layanan JOIN motor m ON a.nopolisi = m.nopolisi JOIN pelanggan p ON p.id = m.id_pelanggan'
     db.query(antrianQuery, (err, results) => {
@@ -296,7 +405,7 @@ db.connect((err) => {
       })
     })
   })
-  app.get('/antrian-ubah/:id', (req, res) => {
+  app.get('/antrian-ubah/:id', requireLoginAdmin, (req, res) => {
     const id = req.params.id
     const getAntrianQuery = `SELECT * FROM antrian WHERE id_antrian = '${id}';`
     const getBengkelQuery = `SELECT id_bengkel, nama_bengkel FROM bengkel`
@@ -328,7 +437,7 @@ db.connect((err) => {
       })
     })
   })
-  app.post('/antrian-ubah/:id', (req, res) => {
+  app.post('/antrian-ubah/:id', requireLoginAdmin, (req, res) => {
     const id = req.params.id
     const nopolisi = req.body.nopolisi
     const id_bengkel = req.body.id_bengkel
@@ -341,7 +450,7 @@ db.connect((err) => {
       res.redirect('/antrian')
     })
   })
-  app.delete('/antrian/:id', (req, res) => {
+  app.delete('/antrian/:id', requireLoginAdmin, (req, res) => {
     const id = req.params.id
 
     console.log('DELETE request received for ID:', id)
@@ -529,90 +638,6 @@ db.connect((err) => {
     })
   })
 
-  //HANDLER REGISTER ADMIN
-  app.get('/register-admin', (req, res) => {
-    res.render('admin/register', { flash: req.flash('error') })
-  })
-
-  app.post('/register-admin', (req, res) => {
-    const username = req.body.username
-    const password = req.body.password
-    const checkUsernameQuery =
-      'SELECT COUNT(*) AS count FROM admin WHERE username = ?'
-    // USERNAME VALIDATION USING FLASH MESSAGE
-    db.query(checkUsernameQuery, [username], (err, result) => {
-      if (err) {
-        throw err
-      }
-      const isUsernameTaken = result[0].count > 0
-      if (isUsernameTaken) {
-        req.flash(
-          'error',
-          'Username sudah terdaftar. Login atau isi username lain.'
-        )
-        return res.redirect('/register-admin')
-      } else {
-        const saltRounds = 10
-        bcrypt.hash(password, saltRounds, (err, hash) => {
-          if (err) {
-            console.error('Error hashing password: ', err)
-            return res.send('An error occurred during registration.')
-          }
-          const insertLayananQuery = `INSERT INTO admin VALUES (NULL, '${username}', '${hash}');`
-          db.query(insertLayananQuery, (err, result) => {
-            if (err) throw err
-            res.redirect(`/login-admin`)
-          })
-        })
-      }
-    })
-  })
-
-  //HANDLER LOGIN ADMIN
-  app.get('/login-admin', (req, res) => {
-    res.render('admin/login', { flash: req.flash('error') })
-  })
-  app.post('/login-admin', (req, res) => {
-    const { username, password } = req.body
-
-    // Query ke database untuk mencari data pengguna berdasarkan username
-    const query = 'SELECT * FROM admin WHERE username = ?'
-    db.query(query, [username], (err, result) => {
-      if (err) {
-        console.error('Error querying database: ', err)
-        return res.send('An error occurred during login.')
-      }
-
-      // Cek apakah data pengguna ditemukan
-      if (result.length === 0) {
-        req.flash('error', 'Username not found.')
-        return res.redirect('/login')
-      }
-
-      // Bandingkan password yang dimasukkan dengan password di database
-      const user = result[0]
-      bcrypt.compare(password, user.password, (error, isMatch) => {
-        if (error) {
-          console.error('Error comparing passwords: ', error)
-          return res.send('An error occurred during login.')
-        }
-
-        if (isMatch) {
-          // Jika password cocok, simpan data pengguna dalam sesi
-          req.session.user = {
-            id: user.id,
-            username: user.username,
-            // tambahkan data lainnya yang ingin disimpan dalam sesi
-          }
-          return res.redirect('/dashboard') // Ganti dengan halaman setelah login berhasil
-        } else {
-          req.flash('error', 'Invalid password.')
-          return res.redirect('/login-admin')
-        }
-      })
-    })
-  })
-
   //HANDLER LOGOUT
   app.get('/logout', (req, res) => {
     // Hapus sesi pengguna
@@ -622,6 +647,18 @@ db.connect((err) => {
       }
       // Redirect ke halaman login setelah logout
       res.redirect('/login')
+    })
+  })
+
+  //HANDLER LOGOUT
+  app.get('/logout-admin', (req, res) => {
+    // Hapus sesi pengguna
+    req.session.destroy((err) => {
+      if (err) {
+        console.log('Error while destroying session:', err)
+      }
+      // Redirect ke halaman login setelah logout
+      res.redirect('/login-admin')
     })
   })
 })

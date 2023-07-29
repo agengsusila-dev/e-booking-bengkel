@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pelanggan</title>
+    <title>Dashboard Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
   </head>
@@ -13,7 +13,7 @@
       <nav class="p-2 space-y-2 text-xs border-x-2">
         <div>
           <a
-            href="/"
+            href="/dashboard"
             class="flex items-center space-x-2 font-medium p-2 text-slate-700 rounded-lg hover:bg-red-500 hover:text-white"
           >
             <svg
@@ -182,7 +182,7 @@
 
         <div>
           <a
-            href="/"
+            href="/logout-admin"
             class="flex items-center space-x-2 font-medium px-2 py-2 text-slate-700 rounded-lg hover:bg-red-500 hover:text-white"
           >
             <svg
@@ -206,6 +206,45 @@
           </a>
         </div>
       </nav>
+      <div class="w-full">
+        <div class="relative overflow-x-auto shadow-md sm:rounded-lg mt-2 mr-2">
+          <div
+            class="p-4 bg-white rounded-lg md:p-8"
+            id="stats"
+            role="tabpanel"
+            aria-labelledby="stats-tab"
+          >
+            <dl
+              class="grid max-w-screen-xl grid-cols-2 gap-8 p-4 mx-auto text-gray-900 sm:grid-cols-3 xl:grid-cols-6 sm:p-8"
+            >
+              <div class="flex flex-col items-center justify-center">
+                <dt class="mb-2 text-3xl font-extrabold">73M+</dt>
+                <dd class="text-gray-500">Developers</dd>
+              </div>
+              <div class="flex flex-col items-center justify-center">
+                <dt class="mb-2 text-3xl font-extrabold">100M+</dt>
+                <dd class="text-gray-500">Public repositories</dd>
+              </div>
+              <div class="flex flex-col items-center justify-center">
+                <dt class="mb-2 text-3xl font-extrabold">1000s</dt>
+                <dd class="text-gray-500">Open source projects</dd>
+              </div>
+              <div class="flex flex-col items-center justify-center">
+                <dt class="mb-2 text-3xl font-extrabold">1B+</dt>
+                <dd class="text-gray-500">Contributors</dd>
+              </div>
+              <div class="flex flex-col items-center justify-center">
+                <dt class="mb-2 text-3xl font-extrabold">90+</dt>
+                <dd class="text-gray-500">Top Forbes companies</dd>
+              </div>
+              <div class="flex flex-col items-center justify-center">
+                <dt class="mb-2 text-3xl font-extrabold">4M+</dt>
+                <dd class="text-gray-500">Organizations</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </div>
     </div>
   </body>
 </html>
