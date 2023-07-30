@@ -152,7 +152,69 @@ db.connect((err) => {
 
   // HANDLER DASHBOARD ADMIN
   app.get('/dashboard', requireLoginAdmin, (req, res) => {
-    res.render('admin/dashboard')
+    const getJumlahPelangganQuery =
+      'SELECT COUNT(*) AS jumlah_pelanggan FROM pelanggan'
+    const getJumlahAntrianQuery =
+      'SELECT COUNT(*) AS jumlah_antrian FROM antrian'
+    const getJumlahMotorQuery = 'SELECT COUNT(*) AS jumlah_motor FROM motor'
+    const getJumlahBengkelQuery =
+      'SELECT COUNT(*) AS jumlah_bengkel FROM bengkel'
+    const getJumlahLayananQuery =
+      'SELECT COUNT(*) AS jumlah_layanan FROM layanan'
+    const user = req.session.user
+
+    db.query(getJumlahPelangganQuery, (err, resultJumlahPelangganQuery) => {
+      if (err) {
+        console.error('Error querying database for jumlah pelanggan:', err)
+        resultJumlahPelangganQuery = [{ jumlah_pelanggan: 0 }]
+      }
+      db.query(getJumlahAntrianQuery, (err, resultJumlahAntrianQuery) => {
+        if (err) {
+          console.error('Error querying database for jumlah antrian:', err)
+          resultJumlahAntrianQuery = [{ jumlah_antrian: 0 }]
+        }
+        db.query(getJumlahMotorQuery, (err, resultJumlahMotorQuery) => {
+          if (err) {
+            console.error('Error querying database for jumlah motor:', err)
+            resultJumlahMotorQuery = [{ jumlah_motor: 0 }]
+          }
+          db.query(getJumlahBengkelQuery, (err, resultJumlahBengkelQuery) => {
+            if (err) {
+              console.error(
+                'Error querying database for jumlah pelanggan:',
+                err
+              )
+              resultJumlahBengkelQuery = [{ jumlah_bengkel: 0 }]
+            }
+            db.query(getJumlahLayananQuery, (err, resultJumlahLayananQuery) => {
+              if (err) {
+                console.error(
+                  'Error querying database for jumlah layanan:',
+                  err
+                )
+                resultJumlahLayananQuery = [{ jumlah_layanan: 0 }]
+              }
+
+              const jumlahPelanggan =
+                resultJumlahPelangganQuery[0].jumlah_pelanggan
+              const jumlahAntrian = resultJumlahAntrianQuery[0].jumlah_antrian
+              const jumlahMotor = resultJumlahMotorQuery[0].jumlah_motor
+              const jumlahBengkel = resultJumlahBengkelQuery[0].jumlah_bengkel
+              const jumlahLayanan = resultJumlahLayananQuery[0].jumlah_layanan
+
+              res.render('admin/dashboard', {
+                jumlahPelanggan,
+                jumlahAntrian,
+                jumlahMotor,
+                jumlahBengkel,
+                jumlahLayanan,
+                user,
+              })
+            })
+          })
+        })
+      })
+    })
   })
 
   // HANDLER PELANGGAN
@@ -594,7 +656,7 @@ db.connect((err) => {
     const tanggal_booking = req.body.tanggal_booking
     const waktu_booking = req.body.waktu_booking
 
-    const insertMotorQuery = `INSERT INTO motor VALUES ('${nopolisi}', '${tahun}', '${tipe}', '${warna}', '${id_pelanggan}');`
+    const insertMotorQuery = `REPLACE INTO motor (nopolisi, tahun, tipe, warna, id_pelanggan) VALUES ('${nopolisi}', '${tahun}', '${tipe}', '${warna}', '${id_pelanggan}')`
     db.query(insertMotorQuery, (err, result) => {
       if (err) throw err
       const insertAntrianQuery = `INSERT INTO antrian VALUES (NULL, '${nopolisi}', '${id_bengkel}', '${id_layanan}', '${keluhan}', '${tanggal_booking}', '${waktu_booking}', NULL) `

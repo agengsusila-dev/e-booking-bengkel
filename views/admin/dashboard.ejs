@@ -206,7 +206,17 @@
           </a>
         </div>
       </nav>
-      <div class="w-full">
+      <div class="w-full space-y-5">
+        <div class="p-6 bg-white border-gray-200 rounded-lg shadow-md mt-2">
+          <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900">
+            Halo, <%= user.username %>
+          </h5>
+          <p class="font-normal text-gray-700">
+            Disini kamu dibutuhkan untuk berkontribusi dalam memberikan
+            pelayanan yang terbaik untuk para Pelanggan.
+          </p>
+        </div>
+
         <div class="relative overflow-x-auto shadow-md sm:rounded-lg mt-2 mr-2">
           <div
             class="p-4 bg-white rounded-lg md:p-8"
@@ -214,34 +224,38 @@
             role="tabpanel"
             aria-labelledby="stats-tab"
           >
-            <dl
-              class="grid max-w-screen-xl grid-cols-2 gap-8 p-4 mx-auto text-gray-900 sm:grid-cols-3 xl:grid-cols-6 sm:p-8"
+            <div
+              class="grid max-w-screen-xl grid-cols-5 gap-8 p-4 mx-auto text-gray-900"
             >
               <div class="flex flex-col items-center justify-center">
-                <dt class="mb-2 text-3xl font-extrabold">73M+</dt>
-                <dd class="text-gray-500">Developers</dd>
+                <dt class="mb-2 text-3xl font-extrabold">
+                  <%= jumlahPelanggan %>
+                </dt>
+                <dd class="text-gray-500 text-center">Pelanggan</dd>
               </div>
               <div class="flex flex-col items-center justify-center">
-                <dt class="mb-2 text-3xl font-extrabold">100M+</dt>
-                <dd class="text-gray-500">Public repositories</dd>
+                <dt class="mb-2 text-3xl font-extrabold">
+                  <%= jumlahAntrian %>
+                </dt>
+                <dd class="text-gray-500">Total Antrian</dd>
               </div>
               <div class="flex flex-col items-center justify-center">
-                <dt class="mb-2 text-3xl font-extrabold">1000s</dt>
-                <dd class="text-gray-500">Open source projects</dd>
+                <dt class="mb-2 text-3xl font-extrabold">
+                  <%= jumlahBengkel %>
+                </dt>
+                <dd class="text-gray-500">Bengkel</dd>
               </div>
               <div class="flex flex-col items-center justify-center">
-                <dt class="mb-2 text-3xl font-extrabold">1B+</dt>
-                <dd class="text-gray-500">Contributors</dd>
+                <dt class="mb-2 text-3xl font-extrabold"><%= jumlahMotor %></dt>
+                <dd class="text-gray-500">Motor</dd>
               </div>
               <div class="flex flex-col items-center justify-center">
-                <dt class="mb-2 text-3xl font-extrabold">90+</dt>
-                <dd class="text-gray-500">Top Forbes companies</dd>
+                <dt class="mb-2 text-3xl font-extrabold">
+                  <%= jumlahLayanan %>
+                </dt>
+                <dd class="text-gray-500">Layanan</dd>
               </div>
-              <div class="flex flex-col items-center justify-center">
-                <dt class="mb-2 text-3xl font-extrabold">4M+</dt>
-                <dd class="text-gray-500">Organizations</dd>
-              </div>
-            </dl>
+            </div>
           </div>
         </div>
       </div>
