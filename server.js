@@ -55,6 +55,9 @@ const db = mysql.createConnection({
 db.connect((err) => {
   if (err) throw err
   console.log('Database connected')
+  app.get('/', (req, res) => {
+    res.render('user/login', { flash: req.flash('error') })
+  })
 
   //HANDLER REGISTER ADMIN
   app.get('/register-admin', (req, res) => {
@@ -300,9 +303,13 @@ db.connect((err) => {
       const id = req.params.id
       const nama = req.body.nama
       const alamat = req.body.alamat
-      const gambar = req.file.filename
+      let gambar = req.file ? req.file.filename : null
 
-      const updateBengkelQuery = `UPDATE bengkel SET nama_bengkel = '${nama}', alamat = '${alamat}', foto_bengkel = '${gambar}' WHERE id_bengkel = '${id}';`
+      let updateBengkelQuery = `UPDATE bengkel SET nama_bengkel = '${nama}', alamat = '${alamat}'`
+      if (gambar) {
+        updateBengkelQuery += `, foto_bengkel = '${gambar}'`
+      }
+      updateBengkelQuery += ` WHERE id_bengkel = '${id}';`
       db.query(updateBengkelQuery, (err, result) => {
         if (err) throw err
         res.redirect('/bengkel')
@@ -433,10 +440,14 @@ db.connect((err) => {
     (req, res) => {
       const id = req.params.id
       const nama = req.body.nama
-      const gambar = req.file.filename
+      let gambar = req.file ? req.file.filename : null
 
-      const updateBengkelQuery = `UPDATE layanan SET nama_layanan = '${nama}', gambar_layanan = '${gambar}' WHERE id_layanan = '${id}';`
-      db.query(updateBengkelQuery, (err, result) => {
+      let updateLayananQuery = `UPDATE layanan SET nama_layanan = '${nama}'`
+      if (gambar) {
+        updateLayananQuery += `, gambar_layanan = '${gambar}'`
+      }
+      updateLayananQuery += ` WHERE id_layanan = '${id}';`
+      db.query(updateLayananQuery, (err, result) => {
         if (err) throw err
         res.redirect('/layanan')
       })

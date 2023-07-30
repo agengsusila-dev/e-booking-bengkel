@@ -266,6 +266,11 @@
               />
             </div>
             <div class="mb-6">
+              <img
+                class="w-1/2 rounded border mb-6"
+                src="../assets/uploads/<%= bengkel.foto_bengkel %>"
+                alt="Gambar Pratinjau"
+              />
               <label
                 class="block mb-2 text-sm font-medium text-gray-900"
                 for="user_avatar"
@@ -277,6 +282,7 @@
                 aria-describedby="user_avatar_help"
                 id="user_avatar"
                 type="file"
+                value="../assets/uploads/<%= bengkel.foto_bengkel %>"
               />
               <div class="mt-1 text-sm text-gray-500" id="user_avatar_help">
                 Pastikan gambar bengkel memiliki kualitas yang baik
